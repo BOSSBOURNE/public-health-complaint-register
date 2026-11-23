@@ -1,0 +1,15 @@
+:root{--ink:#133b36;--gold:#ba914a;--paper:#fff;--edge:#d8e0db}
+body{background:#eff3f0;color:#183932;font-family:"Segoe UI",Arial,sans-serif}
+header.letterhead{background:#fcfcf8;border-top:5px solid var(--ink);border-bottom:2px solid var(--gold);padding:20px max(4vw,16px)}
+header.letterhead strong{letter-spacing:.035em}header.letterhead b{color:#425f4f}
+.rolebar{background:#123b34;padding:6px max(5vw,20px);font-size:.9rem}.rolebar select{padding:4px 8px}
+main{max-width:1240px}.notice{border-radius:4px;border-color:#98732e;background:#faf6e9;font-size:.9rem}
+.registerHero{border-radius:14px;background:linear-gradient(115deg,#123f35,#215843);padding:clamp(20px,3vw,38px);color:white;border-bottom:4px solid var(--gold)}
+.registerHero h1{margin-top:0;letter-spacing:-.035em}.registerHero .muted{color:#dfebe1}.registerHero button{border-color:#e1ebdf}.registerHero button.primary{background:#f0dfaf;color:#273f31;border-color:#f0dfaf}
+.metric,.panel{border-color:var(--edge);box-shadow:0 2px 8px #193b2910}.metric{border-top:3px solid #65947c}.metric:nth-child(2){border-top-color:var(--gold)}.metric b{color:var(--ink)}
+th{background:#f1f6f1}tbody tr:hover{background:#f7faf7}button,input,select,textarea{font-family:inherit}
+:focus-visible{outline:3px solid #ba8034;outline-offset:2px}
+.basemap{display:flex;align-items:center;gap:10px;background:white;padding:8px 12px;border:1px solid var(--edge);border-radius:10px 10px 0 0;font-weight:600}
+.basemap select{margin-left:auto}.basemap+.mapcanvas{border-radius:0 0 10px 10px}.pinGlyph.estimated{background:#305b90;border-style:dashed}
+.estimateNote{padding:8px 12px;background:#e9f1fa;border-left:3px solid #305b90;color:#23456c}
+@media(max-width:650px){.registerHero .tools{margin-top:8px}.rolebar{text-align:center}.registerHero{padding:20px}.metric{padding:12px}.letterhead span{line-height:1.3}}
