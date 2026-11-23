@@ -24,13 +24,14 @@ let activeMap;
 function showMap(initial){
  const list=cases.filter(visible);let selected=list.find(c=>c.id===initial),placing=false,draft=null;
  if(activeMap)activeMap.remove();
- put('<button id="registerBack">Back to register</button><h1>Complaint map</h1><p>A blue ≈ marks an estimated location. An orange dot marks an unchecked site, and a green tick marks a completed field check.</p><div class="maplayout"><div><div class="basemap"><label for="baseChoice">Map view</label><select id="baseChoice"><option>OpenStreetMap</option><option>Satellite</option></select></div><div id="complaintMap" class="mapcanvas" aria-label="Complaint locations"></div><small>Districts and roads from the <a href="https://riteshbabooram.github.io/PDRC-Electoral-District-Locator-Web-App-2025/" target="_blank" rel="noopener">PDRC locator · Ritesh Babooram</a>. Sample case pins are illustrative.</small><section id="selection" class="panel" aria-live="polite"></section></div><section class="panel maplist"><h2>Complaints</h2><label class="field">Filter sites<select id="mapFilter">'+options(['All complaints','Unchecked','Checked','Needs a pin'])+'</select></label><div id="caseList"></div></section></div>');
+ put('<button id="registerBack">Back to register</button><h1>Complaint map</h1><p>A blue ≈ marks an estimated location. An orange dot marks an unchecked site, and a green tick marks a completed field check.</p><div class="maplayout"><div><div class="basemap"><label for="baseChoice">Map view</label><select id="baseChoice"><option>OpenStreetMap</option><option>Satellite</option></select></div><div id="complaintMap" class="mapcanvas" aria-label="Complaint locations"></div><small>Districts and roads from the <a href="https://riteshbabooram.github.io/PDRC-Electoral-District-Locator-Web-App-2025/" target="_blank" rel="noopener">PDRC locator · Ritesh Babooram</a>. Numbered circles are approximate public health reference points from the PDRC Debe and Penal LHA map. Sample case pins are illustrative.</small><section id="selection" class="panel" aria-live="polite"></section></div><section class="panel maplist"><h2>Complaints</h2><label class="field">Filter sites<select id="mapFilter">'+options(['All complaints','Unchecked','Checked','Needs a pin'])+'</select></label><div id="caseList"></div></section></div>');
  const map=L.map('complaintMap',{preferCanvas:true});activeMap=map;
  const boundary=L.geoJSON(districts,{style:{color:'#25735b',weight:2,fillOpacity:.04},interactive:false}).addTo(map);
  map.fitBounds(boundary.getBounds());const streets=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
  const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:19,attribution:'Imagery © Esri, Maxar, Earthstar Geographics and the GIS User Community'});
  let base=streets.addTo(map); $('#baseChoice').onchange=()=>{map.removeLayer(base);base=$('#baseChoice').value==='Satellite'?satellite:streets;base.addTo(map)};
  L.geoJSON(roads,{style:{color:'#648079',weight:1,opacity:.6},onEachFeature:(f,l)=>{if(f.properties.name)l.bindTooltip(safe(f.properties.name),{sticky:true})}}).addTo(map);
+ addHealthAreas(map);
  const pins=L.layerGroup().addTo(map);let draftLayer;
  function clearDraft(){placing=false;draft=null;if(draftLayer){draftLayer.remove();draftLayer=null}}
  function leave(fn){clearDraft();map.remove();activeMap=null;document.querySelector("#role").onchange=home;fn()}
@@ -67,4 +68,51 @@ function showMap(initial){
  $('#caseList').onclick=e=>{const id=e.target.closest('button')?.dataset.case;if(id)choose(list.find(c=>c.id===id))};
  $('#mapFilter').onchange=()=>{clearDraft();if(selected&&!fits(selected))selected=null;render()};
  if(selected)choose(selected);else render();
+}
+
+
+// Reference points digitised from the PDRC Public Health Area Reference Map, Debe and Penal LHA.
+// Numbers identify street-schedule areas; the PDF does not define health-area boundaries.
+const healthAreas = [
+  ["1","La Plaisance Road / La Romain",10.23221,-61.511438],
+  ["2","La Romain: Cross Crossing - South Trunk",10.249665,-61.494334],
+  ["3","La Romain: Duncan Village - La Plaisance",10.237319,-61.489354],
+  ["4A","Duncan Village / Phillipine",10.255412,-61.468136],
+  ["4B","Duncan Village / Phillipine",10.243066,-61.467053],
+  ["5","Dumfries Road",10.227315,-61.48524],
+  ["6","Sunkist / Phillipine Road / Papourie",10.239873,-61.456444],
+  ["7","Duncan Village / Phillipine / Diamond",10.250516,-61.446918],
+  ["8","Union Hall / Retrench / Golconda",10.258604,-61.437824],
+  ["9","Cipero",10.241363,-61.408595],
+  ["10","Ghandi Village / Debe West",10.2039,-61.466187],
+  ["11","Debe West / San Francique",10.179422,-61.476796],
+  ["12","Debe East",10.216885,-61.436958],
+  ["13","S.S. Erin Road corridor",10.227102,-61.459042],
+  ["14","Mahadeo / Mohess",10.185595,-61.440855],
+  ["15","Laltoo / Clarke Road",10.167715,-61.449949],
+  ["16","Clarke Road / Rochard",10.150686,-61.413358],
+  ["17","Lower Barrackpore / Lengua",10.201772,-61.424617],
+  ["18","Upper Barrackpore",10.201346,-61.390408],
+  ["19","Rochard / Penal Rock",10.157498,-61.393439],
+  ["20","Penal Rock Road",10.114075,-61.416606],
+  ["21","Lachoos / Solomon Knox",10.136851,-61.440639],
+  ["22","Penal / Morne Diablo",10.150473,-61.445835],
+  ["23","Penal Quinam / Mendez",10.107263,-61.473548]
+];
+function addHealthAreas(map) {
+ const layer = L.layerGroup().addTo(map);
+ map.createPane('healthAreaPane').style.zIndex = 590;
+ for (const [number, name, lat, lng] of healthAreas) {
+  const lha = Number.parseInt(number,10) <= 13 ? 'Debe LHA' : 'Penal LHA';
+  const label = lha + ' · Area ' + number + ' · ' + name;
+  const icon = L.divIcon({
+   className: 'health-area-number',
+   html: '<span style="display:grid;place-items:center;box-sizing:border-box;width:25px;height:25px;border-radius:50%;border:2px solid #a20049;background:#fff;color:#88003e;font:bold 12px/1 Arial;box-shadow:0 0 0 1px #fff,0 1px 4px #0005">'+number+'</span>',
+   iconSize: [25,25], iconAnchor: [12,12]
+  });
+  L.marker([lat,lng], {icon, pane:'healthAreaPane',title:label,alt:label})
+   .bindPopup('<strong>'+lha+' · Area '+number+'</strong><br>'+safe(name)+'<br><small>Approximate public health reference point</small>')
+   .addTo(layer);
+ }
+ L.control.layers({}, {'Public health area numbers':layer}, {collapsed:false,position:'bottomleft'}).addTo(map);
 }
